@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MatthewDrake - Scene 5: Gameplay Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:ital,wght@0,300;0,500;0,600;0,800;0,900;1,800&family=Space+Grotesk:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-main: #a855f7;
+      --purple-bright: #c084fc;
+      --purple-deep: #4c1d95;
+      --white: #ffffff;
+      
+      --accent-main: rgb(6, 182, 212);
+      --accent-bright: rgb(103, 232, 249);
+      --accent-glow: rgba(6, 182, 212, 0.65);
+      
+      --purple-glow: rgba(168, 85, 247, 0.6);
+      --border-purple: rgba(168, 85, 247, 0.45);
+      --gray-text: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: transparent !important;
+      font-family: 'Kanit', 'Bebas Neue', sans-serif;
+      color: var(--white);
+    }
+
+    .stream-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: transparent !important;
+      overflow: hidden;
+    }
+
+    /* Top Left Compact Header */
+    .game-header {
+      position: absolute;
+      top: 30px;
+      left: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    .avatar-frame {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--white);
+      box-shadow: 0 0 20px var(--purple-glow), 0 0 35px var(--accent-glow);
+      transform: skewX(-8deg);
+      background: #000000;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: skewX(8deg) scale(1.08);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .channel-title {
+      font-family: 'Bebas Neue', 'Kanit', sans-serif;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: var(--white);
+      line-height: 1;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px var(--purple-glow);
+    }
+
+    .channel-sub {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-bright);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* Bottom Social */
+    .game-footer {
+      position: absolute;
+      bottom: 30px;
+      left: 40px;
+      z-index: 10;
+    }
+
+    .clean-social-row {
+      display: flex;
+      align-items: center;
+      background: rgba(7, 6, 14, 0.85);
+      padding: 6px 18px;
+      border-radius: 24px;
+      border: 1.5px solid var(--purple-bright);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 20px var(--purple-glow);
+    }
+
+    .social-clean-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .social-svg-icon {
+      width: 20px;
+      height: 20px;
+      fill: var(--purple-bright);
+      filter: drop-shadow(0 0 8px var(--purple-main));
+    }
+
+    .social-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 1.5px;
+      color: #cbd5e1;
+    }
+
+    .social-text {
+      font-family: 'Space Grotesk', 'Kanit', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--purple-bright);
+    }
+
+    /* Optional Mini Cam Frame (16:9) */
+    .mini-cam-frame {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      width: 320px;
+      height: 180px;
+      border: 2.5px solid var(--purple-bright);
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--purple-glow);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .mini-cam-tag {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(7, 6, 14, 0.85);
+      border: 1px solid var(--accent-bright);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px;
+      color: var(--accent-bright);
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stream-canvas">
+    <!-- Top-Left Branding -->
+    <div class="game-header">
+      <div class="avatar-frame">
+        <img src="avatar.png" alt="Matthew Avatar" class="avatar-img" onerror="this.style.opacity='0.2'">
+      </div>
+      <div class="brand-text">
+        <div class="channel-title">MATTHEWDRAKE</div>
+        <div class="channel-sub">FIVEM GAMEPLAY</div>
+      </div>
+    </div>
+
+    <!-- Bottom-Left Discord Badge -->
+    <div class="game-footer">
+      <div class="clean-social-row">
+        <div class="social-clean-item">
+          <svg class="social-svg-icon" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.098.246.195.373.288a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.893a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          <span class="social-label">DISCORD:</span>
+          <span class="social-text">_newgen</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right Mini Webcam Frame (Transparent Inside) -->
+    <div class="mini-cam-frame">
+      <div class="mini-cam-tag">● CAM</div>
+    </div>
+  </div>
+
+  <script>
+    const chromaticStops = [
+      { r: 6,   g: 182, b: 212, br: 103, bg: 232, bb: 249 },
+      { r: 217, g: 70,  b: 239, br: 244, bg: 114, bb: 182 },
+      { r: 244, g: 63,  b: 94,  br: 251, bg: 113, bb: 133 },
+      { r: 245, g: 158, b: 11,  br: 253, bg: 224, bb: 71  },
+      { r: 16,  g: 185, b: 129, br: 110, bg: 231, bb: 183 },
+    ];
+    let colorProgress = 0;
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function render() {
+      colorProgress += 0.0012;
+      if (colorProgress >= chromaticStops.length) colorProgress -= chromaticStops.length;
+      const curIdx = Math.floor(colorProgress);
+      const nextIdx = (curIdx + 1) % chromaticStops.length;
+      const t = (1 - Math.cos((colorProgress - curIdx) * Math.PI)) / 2;
+
+      const c1 = chromaticStops[curIdx];
+      const c2 = chromaticStops[nextIdx];
+      const r = Math.round(lerp(c1.r, c2.r, t));
+      const g = Math.round(lerp(c1.g, c2.g, t));
+      const b = Math.round(lerp(c1.b, c2.b, t));
+      const curBrightR = Math.round(lerp(c1.br, c2.br, t));
+      const curBrightG = Math.round(lerp(c1.bg, c2.bg, t));
+      const curBrightB = Math.round(lerp(c1.bb, c2.bb, t));
+
+      const root = document.documentElement;
+      root.style.setProperty('--accent-main', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--accent-bright', `rgb(${curBrightR}, ${curBrightG}, ${curBrightB})`);
+      root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.65)`);
+
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>

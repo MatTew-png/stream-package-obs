@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layer 4 - Center Title & Announcement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:ital,wght@0,300;0,500;0,600;0,800;0,900;1,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-main: #a855f7;
+      --purple-bright: #c084fc;
+      --purple-deep: #4c1d95;
+      --white: #ffffff;
+      
+      --accent-main: rgb(6, 182, 212);
+      --accent-bright: rgb(103, 232, 249);
+      --accent-glow: rgba(6, 182, 212, 0.65);
+      
+      --purple-glow: rgba(168, 85, 247, 0.6);
+      --border-purple: rgba(168, 85, 247, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: transparent !important;
+      font-family: 'Kanit', 'Bebas Neue', sans-serif;
+      color: var(--white);
+    }
+
+    .stream-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: transparent !important;
+      overflow: hidden;
+    }
+
+    /* Center Content */
+    .stream-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+      width: 90%;
+      max-width: 1280px;
+    }
+
+    .scene-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 24px;
+      background: linear-gradient(90deg, var(--purple-deep), var(--accent-main));
+      border: 1px solid var(--accent-bright);
+      transform: skewX(-12deg);
+      margin-bottom: 22px;
+      box-shadow: 0 4px 25px var(--accent-glow);
+    }
+
+    .scene-tag span {
+      transform: skewX(12deg);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      letter-spacing: 3px;
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    .main-heading {
+      font-family: 'Bebas Neue', 'Kanit', sans-serif;
+      font-size: 110px;
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--white);
+      text-shadow: 
+        4px 4px 0px #000000, 
+        8px 8px 0px #1a0833, 
+        12px 12px 0px var(--purple-deep),
+        16px 16px 0px var(--border-purple),
+        0 0 35px var(--purple-glow);
+      margin-bottom: 24px;
+    }
+
+    .sub-heading {
+      font-size: 24px;
+      font-weight: 400;
+      color: #ecfdf5;
+      max-width: 960px;
+      margin: 0 auto;
+      line-height: 1.65;
+      background: rgba(7, 6, 14, 0.88);
+      padding: 18px 44px;
+      border-left: 5px solid var(--accent-bright);
+      border-right: 5px solid var(--purple-bright);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stream-canvas">
+    <div class="stream-center">
+      <div class="scene-tag">
+        <span>/// FIVEM & JUST TALK ///</span>
+      </div>
+      
+      <h1 class="main-heading">STREAM STARTING SOON</h1>
+      
+      <p class="sub-heading">
+        ยินดีต้อนรับทุกคนเข้าสู่สตรีม! แวะมาพูดคุย แลกเปลี่ยน ทำความรู้จักกันได้สบายๆ เลยนะค้าบ
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const chromaticStops = [
+      { r: 6,   g: 182, b: 212, br: 103, bg: 232, bb: 249 },
+      { r: 217, g: 70,  b: 239, br: 244, bg: 114, bb: 182 },
+      { r: 244, g: 63,  b: 94,  br: 251, bg: 113, bb: 133 },
+      { r: 245, g: 158, b: 11,  br: 253, bg: 224, bb: 71  },
+      { r: 16,  g: 185, b: 129, br: 110, bg: 231, bb: 183 },
+    ];
+    let colorProgress = 0;
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function render() {
+      colorProgress += 0.0012;
+      if (colorProgress >= chromaticStops.length) colorProgress -= chromaticStops.length;
+      const curIdx = Math.floor(colorProgress);
+      const nextIdx = (curIdx + 1) % chromaticStops.length;
+      const t = (1 - Math.cos((colorProgress - curIdx) * Math.PI)) / 2;
+
+      const c1 = chromaticStops[curIdx];
+      const c2 = chromaticStops[nextIdx];
+      const r = Math.round(lerp(c1.r, c2.r, t));
+      const g = Math.round(lerp(c1.g, c2.g, t));
+      const b = Math.round(lerp(c1.b, c2.b, t));
+      const curBrightR = Math.round(lerp(c1.br, c2.br, t));
+      const curBrightG = Math.round(lerp(c1.bg, c2.bg, t));
+      const curBrightB = Math.round(lerp(c1.bb, c2.bb, t));
+
+      const root = document.documentElement;
+      root.style.setProperty('--accent-main', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--accent-bright', `rgb(${curBrightR}, ${curBrightG}, ${curBrightB})`);
+      root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.65)`);
+
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>

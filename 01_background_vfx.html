@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layer 1 - Background & VFX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-main: #a855f7;
+      --purple-bright: #c084fc;
+      --purple-deep: #4c1d95;
+      --bg-black: #07060e;
+      --white: #ffffff;
+      
+      --accent-main: rgb(6, 182, 212);
+      --accent-bright: rgb(103, 232, 249);
+      --accent-glow: rgba(6, 182, 212, 0.65);
+      
+      --purple-glow: rgba(168, 85, 247, 0.6);
+      --border-purple: rgba(168, 85, 247, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: var(--bg-black);
+    }
+
+    .stream-canvas {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: var(--bg-black);
+      overflow: hidden;
+    }
+
+    /* Sparks Canvas */
+    #sparksCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    /* Laser Scanner */
+    .laser-scanner {
+      position: absolute;
+      top: -100px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent-bright), var(--white), var(--purple-bright), transparent);
+      box-shadow: 0 0 20px var(--accent-bright), 0 0 40px var(--purple-main);
+      opacity: 0.8;
+      animation: scan-sweep 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      pointer-events: none;
+      z-index: 7;
+    }
+
+    @keyframes scan-sweep {
+      0% { top: -50px; opacity: 0; }
+      15% { opacity: 0.85; }
+      85% { opacity: 0.85; }
+      100% { top: 1150px; opacity: 0; }
+    }
+
+    /* Manga Speedlines */
+    .manga-speedlines {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(168, 85, 247, 0.08) 70%, rgba(168, 85, 247, 0.22) 100%),
+                  repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 4deg, rgba(255, 255, 255, 0.02) 4.5deg, transparent 5deg);
+      pointer-events: none;
+      z-index: 1;
+      animation: pulse-speedlines 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse-speedlines {
+      0% { transform: scale(1); opacity: 0.7; }
+      100% { transform: scale(1.03); opacity: 1; }
+    }
+
+    /* Halftone Overlay */
+    .halftone-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+      background-size: 16px 16px;
+      mask-image: linear-gradient(135deg, black 40%, transparent 90%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Kanji Watermark */
+    .kanji-watermark {
+      position: absolute;
+      right: 180px;
+      bottom: 80px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 260px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.04);
+      line-height: 1;
+      writing-mode: vertical-rl;
+      pointer-events: none;
+      letter-spacing: -20px;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stream-canvas">
+    <canvas id="sparksCanvas"></canvas>
+    <div class="laser-scanner"></div>
+    <div class="manga-speedlines"></div>
+    <div class="halftone-overlay"></div>
+    <div class="kanji-watermark">生放送中</div>
+  </div>
+
+  <script>
+    const chromaticStops = [
+      { r: 6,   g: 182, b: 212, br: 103, bg: 232, bb: 249 },
+      { r: 217, g: 70,  b: 239, br: 244, bg: 114, bb: 182 },
+      { r: 244, g: 63,  b: 94,  br: 251, bg: 113, bb: 133 },
+      { r: 245, g: 158, b: 11,  br: 253, bg: 224, bb: 71  },
+      { r: 16,  g: 185, b: 129, br: 110, bg: 231, bb: 183 },
+    ];
+    let colorProgress = 0;
+    let curBrightR = chromaticStops[0].br;
+    let curBrightG = chromaticStops[0].bg;
+    let curBrightB = chromaticStops[0].bb;
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    const canvas = document.getElementById('sparksCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1920;
+    canvas.height = 1080;
+
+    const sparks = [];
+    for (let i = 0; i < 50; i++) {
+      sparks.push({
+        x: Math.random() * 1920,
+        y: Math.random() * 1080,
+        size: Math.random() * 3 + 1,
+        speedY: (Math.random() * 1.5 + 0.6),
+        alpha: Math.random() * 0.8 + 0.2,
+      });
+    }
+
+    function render() {
+      colorProgress += 0.0012;
+      if (colorProgress >= chromaticStops.length) colorProgress -= chromaticStops.length;
+      const curIdx = Math.floor(colorProgress);
+      const nextIdx = (curIdx + 1) % chromaticStops.length;
+      const t = (1 - Math.cos((colorProgress - curIdx) * Math.PI)) / 2;
+
+      const c1 = chromaticStops[curIdx];
+      const c2 = chromaticStops[nextIdx];
+      const r = Math.round(lerp(c1.r, c2.r, t));
+      const g = Math.round(lerp(c1.g, c2.g, t));
+      const b = Math.round(lerp(c1.b, c2.b, t));
+      curBrightR = Math.round(lerp(c1.br, c2.br, t));
+      curBrightG = Math.round(lerp(c1.bg, c2.bg, t));
+      curBrightB = Math.round(lerp(c1.bb, c2.bb, t));
+
+      const root = document.documentElement;
+      root.style.setProperty('--accent-main', `rgb(${r}, ${g}, ${b})`);
+      root.style.setProperty('--accent-bright', `rgb(${curBrightR}, ${curBrightG}, ${curBrightB})`);
+      root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.65)`);
+
+      ctx.clearRect(0, 0, 1920, 1080);
+      sparks.forEach(s => {
+        s.y -= s.speedY;
+        if (s.y < -10) s.y = 1090;
+        ctx.save();
+        ctx.globalAlpha = s.alpha;
+        ctx.fillStyle = `rgb(${curBrightR}, ${curBrightG}, ${curBrightB})`;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#c084fc';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      requestAnimationFrame(render);
+    }
+    render();
+  </script>
+</body>
+</html>
